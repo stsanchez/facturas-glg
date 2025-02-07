@@ -21,19 +21,26 @@ load_dotenv()
 # Obtén las variables de entorno
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_SHEETS_SCOPES = os.getenv("GOOGLE_SHEETS_SCOPES").split(",")  # Los scopes son una lista
-GOOGLE_SHEETS_CREDENTIALS_FILE = os.getenv("GOOGLE_SHEETS_CREDENTIALS_FILE")
+GOOGLE_SHEETS_CREDENTIALS = os.getenv("GOOGLE_SHEETS_CREDENTIALS")  # La variable JSON en formato string
 GOOGLE_SHEETS_URL = os.getenv("GOOGLE_SHEETS_URL")
 
 # Configura tu clave API de OpenAI
 openai.api_key = OPENAI_API_KEY
 
-# Conexión con Google Sheets
-credentials = Credentials.from_service_account_file(GOOGLE_SHEETS_CREDENTIALS_FILE, scopes=GOOGLE_SHEETS_SCOPES)
+# Obtener las credenciales desde la variable de entorno
+credentials_info = json.loads(GOOGLE_SHEETS_CREDENTIALS)
+
+# Crear credenciales desde el JSON en la variable de entorno
+credentials = Credentials.from_service_account_info(credentials_info, scopes=GOOGLE_SHEETS_SCOPES)
+
+# Autorizar acceso a Google Sheets
 gc = gspread.authorize(credentials)
 
 # Abre la hoja de cálculo por URL
 spreadsheet = gc.open_by_url(GOOGLE_SHEETS_URL)
 worksheet = spreadsheet.sheet1  # Usamos la primera hoja
+
+
 
 def extract_text_from_pdf(pdf_path):
     """Extrae texto de un archivo PDF usando pdfplumber."""
