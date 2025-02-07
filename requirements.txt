@@ -1,0 +1,7 @@
+Flask
+openai
+pdfplumber
+gspread
+google-auth
+tenacity
+python-dotenv
