@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesar Facturas</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.16.22/dist/css/uikit.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.16.22/dist/js/uikit.min.js"></script>
+    <style>
+        #drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+        #fileElem {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="uk-container">
+        <h1>Procesar Facturas</h1>
+        <div id="drop-area" class="uk-placeholder uk-text-center">
+            <span uk-icon="cloud-upload"></span>
+            <p class="uk-text-large">Arrastra y suelta tus PDFs aquí o haz clic para seleccionar archivos</p>
+            <input type="file" id="fileElem" multiple accept=".pdf">
+        </div>
+        <progress id="progressBar" class="uk-progress" value="0" max="100" hidden></progress>
+        <div id="fileList"></div> </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
