@@ -51,8 +51,10 @@ async function handleFiles(files) {
 
         if (response.ok) {
             console.log('Archivos subidos correctamente');
-            // Recargar la página o actualizar la lista de archivos si es necesario
-            window.location.reload(); // Recarga la página para mostrar los resultados
+            fileList.innerHTML = `<p style="color: green;">Archivos procesados correctamente.</p>`;
+            setTimeout(() => {
+                window.location.reload(); // Recarga la página para mostrar los resultados
+            }, 2000); // Espera 2 segundos antes de recargar
         } else {
             console.error('Error al subir archivos:', response.status);
             const errorText = await response.text(); // Obtener el mensaje de error del servidor
