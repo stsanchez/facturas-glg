@@ -182,11 +182,11 @@ def index():
 
 
 
-# if __name__ == "__main__":
-#     # Comprobar si la variable de entorno PRODUCTION está definida (para Railway)
-#     if os.environ.get("PRODUCTION") == "true":
-#         # En producción (Railway), no se ejecuta app.run()
-#         pass  # Opcional: podrías agregar aquí código específico para producción
-#     else:
-#         # En desarrollo local, se ejecuta app.run()
-#         app.run(debug=True)  # debug=True para activar el modo de depuración
+if __name__ == "__main__":
+    # Comprobar si la variable de entorno PRODUCTION está definida (para Railway)
+    if os.environ.get("PRODUCTION") == "true":
+        # En producción (Railway), no se ejecuta app.run()
+        pass  # Opcional: podrías agregar aquí código específico para producción
+    else:
+        # En desarrollo local, se ejecuta app.run()
+        app.run(debug=True)  # debug=True para activar el modo de depuración
