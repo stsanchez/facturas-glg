@@ -44,7 +44,11 @@ def extract_text_from_pdf(pdf_file):
         text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
     return text
 
-import openai
+from openai import OpenAI
+
+# Configura el cliente de OpenAI
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 
 def extract_invoice_data_using_gpt(pdf_text):
     """
@@ -94,7 +98,7 @@ def extract_invoice_data_using_gpt(pdf_text):
             {pdf_text}
             """
             logging.info("Enviando solicitud a OpenAI...")
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",  # Cambia a "gpt-3.5-turbo" si es necesario
                 messages=[
                     {"role": "system", "content": "Eres un experto en análisis de texto y procesamiento de facturas."},
@@ -102,7 +106,7 @@ def extract_invoice_data_using_gpt(pdf_text):
                 ]
             )
             logging.info("Respuesta de OpenAI recibida.")
-            content = response['choices'][0]['message']['content']
+            content = response.choices[0].message.content
             logging.info(f"Contenido de la respuesta: {content}")
 
             # Decodificar el JSON
