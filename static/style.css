@@ -1,0 +1,72 @@
+/* Estilos generales */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f8f9fa; /* Color de fondo suave */
+}
+
+.uk-container {
+    max-width: 960px;
+}
+
+/* Cabecera */
+header {
+    background-color: #ffffff; /* Fondo blanco para la cabecera */
+    padding: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+.logo {
+    max-width: 200px;
+    margin-right: 20px;
+    vertical-align: middle;
+}
+
+header h1 {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+    color: #343a40; /* Color de texto oscuro */
+}
+
+/* Área de carga */
+#drop-area {
+    border: 2px dashed #ced4da; /* Borde más claro */
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 20px;
+    background-color: #ffffff; /* Fondo blanco para el área de carga */
+    transition: border-color 0.3s ease; /* Transición suave para el borde */
+}
+
+#drop-area:hover {
+    border-color: #80bdff; /* Borde azul al pasar el mouse */
+}
+
+/* Pie de página */
+footer {
+    background-color: #343a40; /* Color de fondo oscuro */
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Estilos para la lista de archivos */
+#fileList p {
+    margin-bottom: 5px;
+}
+
+#fileList p:last-child {
+    margin-bottom: 0;
+}
+
+/* Estilos para la barra de progreso */
+.uk-progress {
+    margin-top: 10px;
+}

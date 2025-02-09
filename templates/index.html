@@ -6,29 +6,32 @@
     <title>Procesar Facturas</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.16.22/dist/css/uikit.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.16.22/dist/js/uikit.min.js"></script>
-    <style>
-        #drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-        }
-        #fileElem {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <header>
+        <div class="uk-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo de la empresa" class="logo">
+            <h1>Procesar Facturas</h1>
+        </div>
+    </header>
+
     <div class="uk-container">
-        <h1>Procesar Facturas</h1>
         <div id="drop-area" class="uk-placeholder uk-text-center">
             <span uk-icon="cloud-upload"></span>
             <p class="uk-text-large">Arrastra y suelta tus PDFs aquí o haz clic para seleccionar archivos</p>
             <input type="file" id="fileElem" multiple accept=".pdf">
         </div>
         <progress id="progressBar" class="uk-progress" value="0" max="100" hidden></progress>
-        <div id="fileList"></div> </div>
+        <div id="fileList"></div>
+    </div>
+
+    <footer>
+        <div class="uk-container">
+            <p>&copy; 2024 Empresa. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
