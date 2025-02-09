@@ -1,7 +1,7 @@
 Flask
 google-auth
 gspread
-gunicorn=
+gunicorn
 openai
 pdfplumber
 python-dotenv
