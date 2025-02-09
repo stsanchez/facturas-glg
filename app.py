@@ -85,25 +85,31 @@ def extract_invoice_data_using_gpt(pdf_text):
     {pdf_text}
     """
     try:
+        print("Iniciando solicitud a OpenAI...")  # Log adicional
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # Usa GPT-4 si está disponible
+            model="gpt-4",  # Cambia a "gpt-3.5-turbo" si es necesario
             messages=[
                 {"role": "system", "content": "Eres un experto en análisis de texto y procesamiento de facturas."},
                 {"role": "user", "content": prompt}
             ]
         )
+        print("Respuesta de OpenAI recibida.")  # Log adicional
         content = response['choices'][0]['message']['content']
     except openai.error.RateLimitError:
         print("Se alcanzó el límite de solicitudes. Esperando para reintentar...")
         time.sleep(60)  # Esperar 1 minuto antes de reintentar
         return None
+    except openai.error.InvalidRequestError as e:
+        print(f"Error en la solicitud a OpenAI: {e}")
+        return None
     except Exception as e:
         print(f"Error en la API de OpenAI: {e}")
         return None
 
-    # Intentar convertir la respuesta a JSON
     try:
+        print("Intentando decodificar JSON...")  # Log adicional
         extracted_data = json.loads(content)
+        print("JSON decodificado correctamente.")  # Log adicional
     except json.JSONDecodeError as e:
         print("Error al decodificar el JSON:", e)
         print("Respuesta del modelo:", content)
