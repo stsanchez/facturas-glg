@@ -9,6 +9,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from dotenv import load_dotenv
 from io import BytesIO
+import logging
 
 app = Flask(__name__, static_folder='static')
 
@@ -43,79 +44,95 @@ def extract_text_from_pdf(pdf_file):
         text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
     return text
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 def extract_invoice_data_using_gpt(pdf_text):
     """
     Usa la API de OpenAI para analizar el texto del PDF y extraer los datos de la factura.
+    Maneja reintentos manualmente en caso de errores.
     """
-    prompt = f"""
-    Extrae los siguientes campos del texto de una factura. Si un campo no existe, responde con un espacio vacío:
-    1. Importe Neto Gravado en dólares (USD)
-    2. Importe Neto Gravado en pesos ($)
-    3. IVA 21% en dólares (USD)
-    4. IVA 21% en pesos ($)
-    5. Importe Otros Tributos en dólares (USD)
-    6. Importe Otros Tributos en pesos ($)
-    7. Importe Total en dólares (USD)
-    8. Importe Total en pesos ($)
-    9. Valor Total en Pesos (si la factura está en dólares y este campo existe, extraerlo; si no existe, usar el Importe Total)
-    10. Número de Comprobante
-    11. Fecha de Emisión
-    12. CUIT del receptor (excluir "30711391963" y eliminar guiones)
-    13. Razón Social del receptor (excluir "GLOBAL LOGISTICS")
+    max_attempts = 3  # Número máximo de intentos
+    wait_time = 4  # Tiempo de espera inicial entre intentos (en segundos)
 
-    Devuelve el resultado estrictamente en formato JSON válido, sin texto adicional ni explicaciones. Por ejemplo:
-    {{
-        "Importe Neto Gravado (USD)": "",
-        "Importe Neto Gravado ($)": "",
-        "IVA 21% (USD)": "",
-        "IVA 21% ($)": "",
-        "Importe Otros Tributos (USD)": "",
-        "Importe Otros Tributos ($)": "",
-        "Importe Total (USD)": "",
-        "Importe Total ($)": "",
-        "Valor Total en Pesos": "",
-        "Número de Comprobante": "",
-        "Fecha de Emisión": "",
-        "CUIT del receptor": "",
-        "Razón Social del receptor": ""
-    }}
+    for attempt in range(max_attempts):
+        try:
+            logging.info(f"Intento {attempt + 1} de {max_attempts}...")
+            prompt = f"""
+            Extrae los siguientes campos del texto de una factura. Si un campo no existe, responde con un espacio vacío:
+            1. Importe Neto Gravado en dólares (USD)
+            2. Importe Neto Gravado en pesos ($)
+            3. IVA 21% en dólares (USD)
+            4. IVA 21% en pesos ($)
+            5. Importe Otros Tributos en dólares (USD)
+            6. Importe Otros Tributos en pesos ($)
+            7. Importe Total en dólares (USD)
+            8. Importe Total en pesos ($)
+            9. Valor Total en Pesos (si la factura está en dólares y este campo existe, extraerlo; si no existe, usar el Importe Total)
+            10. Número de Comprobante
+            11. Fecha de Emisión
+            12. CUIT del receptor (excluir "30711391963" y eliminar guiones)
+            13. Razón Social del receptor (excluir "GLOBAL LOGISTICS")
 
-    Aquí está el texto de la factura:
-    {pdf_text}
-    """
-    try:
-        print("Iniciando solicitud a OpenAI...")  # Log adicional
-        response = openai.ChatCompletion.create(
-            model="gpt-4",  # Cambia a "gpt-3.5-turbo" si es necesario
-            messages=[
-                {"role": "system", "content": "Eres un experto en análisis de texto y procesamiento de facturas."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        print("Respuesta de OpenAI recibida.")  # Log adicional
-        content = response['choices'][0]['message']['content']
-    except openai.error.RateLimitError:
-        print("Se alcanzó el límite de solicitudes. Esperando para reintentar...")
-        time.sleep(60)  # Esperar 1 minuto antes de reintentar
-        return None
-    except openai.error.InvalidRequestError as e:
-        print(f"Error en la solicitud a OpenAI: {e}")
-        return None
-    except Exception as e:
-        print(f"Error en la API de OpenAI: {e}")
-        return None
+            Devuelve el resultado estrictamente en formato JSON válido, sin texto adicional ni explicaciones. Por ejemplo:
+            {{
+                "Importe Neto Gravado (USD)": "",
+                "Importe Neto Gravado ($)": "",
+                "IVA 21% (USD)": "",
+                "IVA 21% ($)": "",
+                "Importe Otros Tributos (USD)": "",
+                "Importe Otros Tributos ($)": "",
+                "Importe Total (USD)": "",
+                "Importe Total ($)": "",
+                "Valor Total en Pesos": "",
+                "Número de Comprobante": "",
+                "Fecha de Emisión": "",
+                "CUIT del receptor": "",
+                "Razón Social del receptor": ""
+            }}
 
-    try:
-        print("Intentando decodificar JSON...")  # Log adicional
-        extracted_data = json.loads(content)
-        print("JSON decodificado correctamente.")  # Log adicional
-    except json.JSONDecodeError as e:
-        print("Error al decodificar el JSON:", e)
-        print("Respuesta del modelo:", content)
-        return None
+            Aquí está el texto de la factura:
+            {pdf_text}
+            """
+            logging.info("Enviando solicitud a OpenAI...")
+            response = openai.ChatCompletion.create(
+                model="gpt-4",  # Cambia a "gpt-3.5-turbo" si es necesario
+                messages=[
+                    {"role": "system", "content": "Eres un experto en análisis de texto y procesamiento de facturas."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            logging.info("Respuesta de OpenAI recibida.")
+            content = response['choices'][0]['message']['content']
+            logging.info(f"Contenido de la respuesta: {content}")
 
-    return extracted_data
+            # Decodificar el JSON
+            logging.info("Intentando decodificar JSON...")
+            extracted_data = json.loads(content)
+            logging.info("JSON decodificado correctamente.")
+            return extracted_data  # Si tiene éxito, retorna los datos
+
+        except openai.error.RateLimitError as e:
+            logging.error(f"RateLimitError: {e}. Reintentando en {wait_time} segundos...")
+            time.sleep(wait_time)
+            wait_time *= 2  # Aumenta el tiempo de espera exponencialmente
+
+        except openai.error.InvalidRequestError as e:
+            logging.error(f"InvalidRequestError: {e}")
+            raise  # No reintentar en caso de error de solicitud inválida
+
+        except json.JSONDecodeError as e:
+            logging.error(f"Error al decodificar JSON: {e}")
+            logging.error(f"Respuesta del modelo: {content}")
+            raise  # No reintentar en caso de error de decodificación de JSON
+
+        except Exception as e:
+            logging.error(f"Error inesperado: {e}")
+            if attempt == max_attempts - 1:  # Si es el último intento, relanza la excepción
+                raise
+            logging.info(f"Reintentando en {wait_time} segundos...")
+            time.sleep(wait_time)
+            wait_time *= 2  # Aumenta el tiempo de espera exponencialmente
+
+    logging.error("Se agotaron los intentos.")
+    return None  # Si se agotan los intentos, retorna None
 
 def process_invoice(pdf_file):
     """Procesa un solo archivo PDF en memoria y guarda los resultados en Google Sheets."""
