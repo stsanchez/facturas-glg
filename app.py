@@ -115,38 +115,44 @@ def process_invoice(pdf_file):
     """Procesa un solo archivo PDF en memoria y guarda los resultados en Google Sheets."""
     if pdf_file.filename.lower().endswith(".pdf"):  # Solo procesa archivos PDF
         print(f"Procesando {pdf_file.filename}...")
-        pdf_text = extract_text_from_pdf(pdf_file)
-        extracted_data = extract_invoice_data_using_gpt(pdf_text)
-        
-        if extracted_data:  # Asegurarse de que la extracción fue exitosa
-            # Extraemos los datos y los agregamos a Google Sheets
-            row = [
-                extracted_data["Razón Social del receptor"],
-                extracted_data["CUIT del receptor"],
-                extracted_data["Número de Comprobante"],
-                extracted_data["Fecha de Emisión"],
-                extracted_data["Importe Neto Gravado (USD)"],
-                extracted_data["Importe Neto Gravado ($)"],
-                extracted_data["IVA 21% (USD)"],
-                extracted_data["IVA 21% ($)"],
-                extracted_data["Importe Otros Tributos (USD)"],
-                extracted_data["Importe Otros Tributos ($)"],
-                extracted_data["Importe Total (USD)"],
-                extracted_data["Importe Total ($)"],
-                extracted_data["Valor Total en Pesos"]
-            ]
+        try:
+            pdf_text = extract_text_from_pdf(pdf_file)
+            print(f"Texto extraído del PDF: {pdf_text[:100]}...")  # Log del texto extraído
+            extracted_data = extract_invoice_data_using_gpt(pdf_text)
             
-            # Obtén las filas actuales en la hoja
-            rows = worksheet.get_all_values()
+            if extracted_data:  # Asegurarse de que la extracción fue exitosa
+                print(f"Datos extraídos: {extracted_data}")  # Log de los datos extraídos
+                # Extraemos los datos y los agregamos a Google Sheets
+                row = [
+                    extracted_data["Razón Social del receptor"],
+                    extracted_data["CUIT del receptor"],
+                    extracted_data["Número de Comprobante"],
+                    extracted_data["Fecha de Emisión"],
+                    extracted_data["Importe Neto Gravado (USD)"],
+                    extracted_data["Importe Neto Gravado ($)"],
+                    extracted_data["IVA 21% (USD)"],
+                    extracted_data["IVA 21% ($)"],
+                    extracted_data["Importe Otros Tributos (USD)"],
+                    extracted_data["Importe Otros Tributos ($)"],
+                    extracted_data["Importe Total (USD)"],
+                    extracted_data["Importe Total ($)"],
+                    extracted_data["Valor Total en Pesos"]
+                ]
+                
+                # Obtén las filas actuales en la hoja
+                rows = worksheet.get_all_values()
+                
+                # Encuentra la siguiente fila vacía
+                next_row = len(rows) + 1
+                
+                # Actualiza la fila en el rango correspondiente (A{next_row}:M{next_row})
+                worksheet.update(f"A{next_row}:M{next_row}", [row])  # Actualiza la fila en las columnas de A a M
+                print(f"Factura procesada y datos guardados en Google Sheets: {row}")
             
-            # Encuentra la siguiente fila vacía
-            next_row = len(rows) + 1
-            
-            # Actualiza la fila en el rango correspondiente (A{next_row}:M{next_row})
-            worksheet.update(f"A{next_row}:M{next_row}", [row])  # Actualiza la fila en las columnas de A a M
-            print(f"Factura procesada y datos guardados en Google Sheets: {row}")
-        
-        time.sleep(10)  # Pausa entre procesamientos
+            time.sleep(10)  # Pausa entre procesamientos
+        except Exception as e:
+            print(f"Error al procesar archivo {pdf_file.filename}: {e}")
+            raise  # Relanza la excepción para ver el traceback completo
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
