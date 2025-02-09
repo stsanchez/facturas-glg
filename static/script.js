@@ -5,20 +5,20 @@ const fileList = document.getElementById('fileList');
 
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
     dropArea.addEventListener(eventName, preventDefaults, false)
-})
+});
 
-function preventDefaults (e) {
-    e.preventDefault()
-    e.stopPropagation()
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
 }
 
-dropArea.addEventListener('drop', handleDrop, false)
+dropArea.addEventListener('drop', handleDrop, false);
 
 function handleDrop(e) {
-    let dt = e.dataTransfer
-    let files = dt.files
+    let dt = e.dataTransfer;
+    let files = dt.files;
 
-    handleFiles(files)
+    handleFiles(files);
 }
 
 fileElem.addEventListener('change', (e) => {
@@ -28,7 +28,6 @@ fileElem.addEventListener('change', (e) => {
 dropArea.addEventListener('click', () => {
     fileElem.click();
 });
-
 
 async function handleFiles(files) {
     progressBar.removeAttribute('hidden');
