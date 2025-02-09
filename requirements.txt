@@ -1,8 +1,10 @@
 Flask
-google-auth
-gspread
 gunicorn
 openai
 pdfplumber
-python-dotenv
+gspread
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
 tenacity
+python-dotenv
