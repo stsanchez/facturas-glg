@@ -9,8 +9,19 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from dotenv import load_dotenv
 from io import BytesIO
+import logging
 
 app = Flask(__name__, static_folder='static')
+
+# Configuración del logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),  # Logs a un archivo
+        logging.StreamHandler()  # Logs a la consola
+    ]
+)
 
 # Carga las variables de entorno desde .env
 load_dotenv()
@@ -39,8 +50,10 @@ worksheet = spreadsheet.sheet1  # Usamos la primera hoja
 
 def extract_text_from_pdf(pdf_file):
     """Extrae texto de un archivo PDF en memoria usando pdfplumber."""
+    logging.info(f"Extrayendo texto del PDF: {pdf_file.filename}")
     with pdfplumber.open(BytesIO(pdf_file.read())) as pdf:
         text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+    logging.info(f"Texto extraído del PDF: {text[:100]}...")  # Log del texto extraído
     return text
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
@@ -48,6 +61,7 @@ def extract_invoice_data_using_gpt(pdf_text):
     """
     Usa la API de OpenAI para analizar el texto del PDF y extraer los datos de la factura.
     """
+    logging.info("Iniciando solicitud a OpenAI...")
     prompt = f"""
     Extrae los siguientes campos del texto de una factura. Si un campo no existe, responde con un espacio vacío:
     1. Importe Neto Gravado en dólares (USD)
@@ -85,7 +99,6 @@ def extract_invoice_data_using_gpt(pdf_text):
     {pdf_text}
     """
     try:
-        print("Iniciando solicitud a OpenAI...")  # Log adicional
         response = openai.ChatCompletion.create(
             model="gpt-4",  # Cambia a "gpt-3.5-turbo" si es necesario
             messages=[
@@ -93,26 +106,26 @@ def extract_invoice_data_using_gpt(pdf_text):
                 {"role": "user", "content": prompt}
             ]
         )
-        print("Respuesta de OpenAI recibida.")  # Log adicional
+        logging.info("Respuesta de OpenAI recibida.")
         content = response['choices'][0]['message']['content']
     except openai.error.RateLimitError:
-        print("Se alcanzó el límite de solicitudes. Esperando para reintentar...")
+        logging.warning("Se alcanzó el límite de solicitudes. Esperando para reintentar...")
         time.sleep(60)  # Esperar 1 minuto antes de reintentar
         return None
     except openai.error.InvalidRequestError as e:
-        print(f"Error en la solicitud a OpenAI: {e}")
+        logging.error(f"Error en la solicitud a OpenAI: {e}")
         return None
     except Exception as e:
-        print(f"Error en la API de OpenAI: {e}")
+        logging.error(f"Error en la API de OpenAI: {e}")
         return None
 
     try:
-        print("Intentando decodificar JSON...")  # Log adicional
+        logging.info("Intentando decodificar JSON...")
         extracted_data = json.loads(content)
-        print("JSON decodificado correctamente.")  # Log adicional
+        logging.info("JSON decodificado correctamente.")
     except json.JSONDecodeError as e:
-        print("Error al decodificar el JSON:", e)
-        print("Respuesta del modelo:", content)
+        logging.error("Error al decodificar el JSON:", e)
+        logging.error("Respuesta del modelo:", content)
         return None
 
     return extracted_data
@@ -120,14 +133,13 @@ def extract_invoice_data_using_gpt(pdf_text):
 def process_invoice(pdf_file):
     """Procesa un solo archivo PDF en memoria y guarda los resultados en Google Sheets."""
     if pdf_file.filename.lower().endswith(".pdf"):  # Solo procesa archivos PDF
-        print(f"Procesando {pdf_file.filename}...")
+        logging.info(f"Procesando {pdf_file.filename}...")
         try:
             pdf_text = extract_text_from_pdf(pdf_file)
-            print(f"Texto extraído del PDF: {pdf_text[:100]}...")  # Log del texto extraído
             extracted_data = extract_invoice_data_using_gpt(pdf_text)
             
             if extracted_data:  # Asegurarse de que la extracción fue exitosa
-                print(f"Datos extraídos: {extracted_data}")  # Log de los datos extraídos
+                logging.info(f"Datos extraídos: {extracted_data}")
                 # Extraemos los datos y los agregamos a Google Sheets
                 row = [
                     extracted_data["Razón Social del receptor"],
@@ -153,11 +165,11 @@ def process_invoice(pdf_file):
                 
                 # Actualiza la fila en el rango correspondiente (A{next_row}:M{next_row})
                 worksheet.update(f"A{next_row}:M{next_row}", [row])  # Actualiza la fila en las columnas de A a M
-                print(f"Factura procesada y datos guardados en Google Sheets: {row}")
+                logging.info(f"Factura procesada y datos guardados en Google Sheets: {row}")
             
             time.sleep(10)  # Pausa entre procesamientos
         except Exception as e:
-            print(f"Error al procesar archivo {pdf_file.filename}: {e}")
+            logging.error(f"Error al procesar archivo {pdf_file.filename}: {e}")
             raise  # Relanza la excepción para ver el traceback completo
 
 @app.route('/', methods=['GET', 'POST'])
@@ -172,15 +184,13 @@ def index():
                         # Procesar el archivo directamente en memoria
                         process_invoice(file)
                     except Exception as e:
-                        print(f"Error al procesar archivo {file.filename}: {e}")
+                        logging.error(f"Error al procesar archivo {file.filename}: {e}")
                         return f"Error al procesar {file.filename}: {e}", 500  # Devuelve un error 500
 
             return redirect(url_for('index'))  # Redirige para mostrar los resultados
         else:
             return "No se encontraron archivos", 400  # Devuelve un error 400 si no hay archivos
     return render_template('index.html')
-
-
 
 if __name__ == "__main__":
     # Comprobar si la variable de entorno PRODUCTION está definida (para Railway)
