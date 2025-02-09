@@ -44,6 +44,8 @@ def extract_text_from_pdf(pdf_file):
         text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
     return text
 
+import openai
+
 def extract_invoice_data_using_gpt(pdf_text):
     """
     Usa la API de OpenAI para analizar el texto del PDF y extraer los datos de la factura.
@@ -109,14 +111,14 @@ def extract_invoice_data_using_gpt(pdf_text):
             logging.info("JSON decodificado correctamente.")
             return extracted_data  # Si tiene éxito, retorna los datos
 
-        except openai.error.RateLimitError as e:
+        except openai.RateLimitError as e:
             logging.error(f"RateLimitError: {e}. Reintentando en {wait_time} segundos...")
             time.sleep(wait_time)
             wait_time *= 2  # Aumenta el tiempo de espera exponencialmente
 
-        except openai.error.InvalidRequestError as e:
-            logging.error(f"InvalidRequestError: {e}")
-            raise  # No reintentar en caso de error de solicitud inválida
+        except openai.APIError as e:
+            logging.error(f"APIError: {e}")
+            raise  # No reintentar en caso de error de API
 
         except json.JSONDecodeError as e:
             logging.error(f"Error al decodificar JSON: {e}")
