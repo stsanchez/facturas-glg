@@ -54,7 +54,8 @@ footer {
     color: white;
     padding: 10px 0;
     text-align: center;
-    margin-top: 20px;
+    margin-top: auto; /* Este es el cambio clave */
+    width: 100%; /* Asegura que el footer ocupe todo el ancho */
 }
 
 /* Estilos para la lista de archivos */
