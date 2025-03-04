@@ -99,7 +99,8 @@ def extract_invoice_data_using_gpt(pdf_text):
             """
             logging.info("Enviando solicitud a OpenAI...")
             response = client.chat.completions.create(
-                model="gpt-4",  # Cambia a "gpt-3.5-turbo" si es necesario
+                model="gpt-3.5-turbo",  # Cambia a "gpt-3.5-turbo" si es necesario 
+
                 messages=[
                     {"role": "system", "content": "Eres un experto en análisis de texto y procesamiento de facturas."},
                     {"role": "user", "content": prompt}
