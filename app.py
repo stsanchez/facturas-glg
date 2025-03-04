@@ -104,7 +104,8 @@ def extract_invoice_data_using_gpt(pdf_text):
                 messages=[
                     {"role": "system", "content": "Eres un experto en análisis de texto y procesamiento de facturas."},
                     {"role": "user", "content": prompt}
-                ]
+                ],
+                max_tokens=600
             )
             logging.info("Respuesta de OpenAI recibida.")
             content = response.choices[0].message.content
