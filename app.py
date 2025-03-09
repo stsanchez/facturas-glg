@@ -39,10 +39,14 @@ spreadsheet = gc.open_by_url(GOOGLE_SHEETS_URL)
 worksheet = spreadsheet.sheet1  # Usamos la primera hoja
 
 def extract_text_from_pdf(pdf_file):
-    """Extrae texto de un archivo PDF en memoria usando pdfplumber."""
+    """Extrae texto de la primera página de un archivo PDF en memoria usando pdfplumber."""
     with pdfplumber.open(BytesIO(pdf_file.read())) as pdf:
-        text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
-    return text
+        if pdf.pages:  # Verifica si el PDF tiene al menos una página
+            first_page = pdf.pages[0]  # Obtiene la primera página
+            text = first_page.extract_text()
+            return text
+        else:
+            return ""  # Retorna una cadena vacía si el PDF no tiene páginas
 
 from openai import OpenAI
 
