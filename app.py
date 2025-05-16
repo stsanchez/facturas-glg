@@ -12,7 +12,7 @@ from io import BytesIO
 import logging
 
 app = Flask(__name__, static_folder='static')
-
+#prueba de git
 # Carga las variables de entorno desde .env
 load_dotenv()
 
