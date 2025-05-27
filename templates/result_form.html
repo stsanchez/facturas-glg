@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}Revisar Datos Extraídos{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <h1 class="mb-4 text-center">Revisar y Confirmar Datos</h1>
+
+      <form action="{{ url_for('confirmar_datos') }}" method="post">
+        {% for key, value in datos.items() %}
+          <div class="mb-3">
+            <label for="{{ key }}" class="form-label"><strong>{{ key }}</strong></label>
+            <input type="text" class="form-control" id="{{ key }}" name="{{ key }}" value="{{ value }}" required>
+          </div>
+        {% endfor %}
+
+        <!-- ✅ Campo oculto con el nombre del PDF -->
+        <input type="hidden" name="pdf_filename" value="{{ pdf_filename }}">
+
+        <div class="d-flex justify-content-between">
+          <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar y volver</a>
+          <button type="submit" class="btn btn-primary">Confirmar e Insertar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

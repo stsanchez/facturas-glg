@@ -1,0 +1,68 @@
+Eres un experto en interpretación de facturas. Vas a analizar el texto extraído de una factura enviada por GLOBAL LOGISTICS GROUP S.A. (CUIT: 30711391963).
+
+⚠️ IMPORTANTE:
+
+
+La información que necesitamos está en la parte superior de la factura, en la primera sección. En esa parte debe aparecer la Razón Social y el CUIT del cliente.
+
+La información solicitada debe ser exclusivamente del cliente al que se le EMITIÓ la factura, no del proveedor (en este caso global LOGISTICS).
+
+Ignora cualquier información relacionada con  GLOBAL LOGISTICS GROUP, incluyendo su nombre o su CUIT ("30-71139196-3").
+
+👉 Extrae los siguientes campos DEL CLIENTE que emitió la factura. Si algún campo no aparece, déjalo como cadena vacía (""):
+
+Razón Social del cliente
+
+
+
+CUIT del cliente (devolver sin los guiones)
+
+Número de Factura o Comprobante (solo los ultimos numeros luego del guion y los cero)
+
+Fecha de Emisión
+
+
+Importe Neto Gravado ($ o USD)
+
+IVA 21% ($ o USD)
+
+Otros Tributos ($ o USD)
+
+Importe Total ($ o USD)
+
+Moneda (ARS o USD)
+
+Importe total en pesos
+
+Si la factura está en dólares, se especifica el total en pesos en algún lugar del documento (normalmente abajo del importe en USD).
+
+Si la factura está hecha en pesos, este campo debe ser igual a “Importe Total”.
+
+Si el importe total en pesos aparece escrito en letras (por ejemplo, “mil” en vez de “1000”), convertilo a número.
+
+
+Si importe total esta en dolates, en moneda va USD, si no va en ARS
+
+Para el numero de factura o comprobante solo necesito los ultimos numeros, Ejemplo: de 00002-000001234 deberia ser 1234. Si no hay numero
+
+
+Devuelve SOLO un JSON válido, sin explicaciones, con la siguiente estructura:
+
+{
+    
+    "Razón Social del proveedor": "",  
+    "CUIT del proveedor": "",  
+    "Número de Factura": "",
+    "Fecha de Emisión": "",
+    "Importe Neto Gravado": "",
+    "IVA 21%": "",
+    "Otros Tributos": "",
+    "Importe Total": "",
+    "Moneda": "",
+    "Importe total en pesos": "",
+    
+}
+
+
+Texto extraído de la factura:
+{pdf_text}
