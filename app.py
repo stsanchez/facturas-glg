@@ -212,6 +212,10 @@ def confirmar_datos():
 
 
 
-# === Ejecutar app ===
-if __name__ == '__main__':
-    app.run(debug=True)
+# === Run local ===
+if __name__ == "__main__":
+    if os.getenv("PRODUCTION") == "true":
+        # En Railway u otro entorno productivo
+        pass
+    else:
+        app.run(debug=True)
