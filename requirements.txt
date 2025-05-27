@@ -6,5 +6,7 @@ gspread
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
+google-api-python-client  # <--- AÑADE ESTA LÍNEA
 tenacity
 python-dotenv
+
