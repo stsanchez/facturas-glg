@@ -17,6 +17,8 @@ Razón Social del cliente
 
 CUIT del cliente (devolver sin los guiones)
 
+Tipo de comprobante
+
 Número de Factura o Comprobante (solo los ultimos numeros luego del guion y los cero)
 
 Fecha de Emisión
@@ -34,6 +36,13 @@ Moneda (ARS o USD)
 
 Importe total en pesos
 
+El tipo de comprobante puede ser Factura electronica(FC), factura de credito mipyme(FC), nota de debito(ND) o nota de credito(NC). Insertar solo la abreviatura 
+
+Si es nota de credito, los valores numericos deben insertatse en negativo.
+
+Si es nota de debito o nota de debito mipymes o nota de credito o nota de credito mipymes, como numero de comprobante se pone el que corresponde de arriba a la derecha despues de punto de venta. NO va lo que dice en la descripcion.
+
+
 Si la factura está en dólares, se especifica el total en pesos en algún lugar del documento (normalmente abajo del importe en USD).
 
 Si la factura está hecha en pesos, este campo debe ser igual a “Importe Total”.
@@ -46,12 +55,14 @@ Si importe total esta en dolates, en moneda va USD, si no va en ARS
 Para el numero de factura o comprobante solo necesito los ultimos numeros, Ejemplo: de 00002-000001234 deberia ser 1234. Si no hay numero
 
 
+
 Devuelve SOLO un JSON válido, sin explicaciones, con la siguiente estructura:
 
 {
     
     "Razón Social del proveedor": "",  
-    "CUIT del proveedor": "",  
+    "CUIT del proveedor": "", 
+    "Tipo de comprobante":"", 
     "Número de Factura": "",
     "Fecha de Emisión": "",
     "Importe Neto Gravado": "",
