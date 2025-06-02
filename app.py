@@ -9,6 +9,8 @@ from google.oauth2.service_account import Credentials
 import gspread
 import time
 import re
+import io
+import base64
 
 # === Configuración inicial ===
 load_dotenv()
@@ -140,6 +142,27 @@ def insert_data_into_sheet(data):
     cleaned_data = {k: limpiar_importe(v) if k in campos_a_convertir else v for k, v in data.items()}
     worksheet.append_row(list(cleaned_data.values()))
 
+from googleapiclient.http import MediaIoBaseUpload
+
+def upload_pdf_to_drive_bytes(pdf_bytes, filename):
+    credentials_drive = Credentials.from_service_account_info(credentials_info, scopes=GOOGLE_SHEETS_SCOPES)
+    drive_service = build('drive', 'v3', credentials=credentials_drive)
+
+    file_metadata = {
+        'name': filename,
+        'mimeType': 'application/pdf'
+    }
+
+    media = MediaIoBaseUpload(io.BytesIO(pdf_bytes), mimetype='application/pdf')
+    uploaded_file = drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+    drive_service.permissions().create(
+        fileId=uploaded_file['id'],
+        body={'role': 'reader', 'type': 'anyone'},
+    ).execute()
+
+    return f"https://drive.google.com/file/d/{uploaded_file['id']}/view?usp=sharing"
+
 # === Rutas de Flask ===
 @app.route('/')
 def index():
@@ -157,10 +180,18 @@ def procesar_pdf():
         return redirect(url_for('index'))
 
     if archivo and archivo.filename.lower().endswith('.pdf'):
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], archivo.filename)
-        archivo.save(filepath)
 
-        pdf_text = extract_text_from_pdf_file(filepath)
+        #filepath = os.path.join(app.config['UPLOAD_FOLDER'], archivo.filename)
+        #archivo.save(filepath)
+        #pdf_text = extract_text_from_pdf_file(filepath)
+        pdf_bytes = archivo.read()
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            if pdf.pages:
+                pdf_text = pdf.pages[0].extract_text() or ""
+            else:
+                pdf_text = ""
+
+
         if not pdf_text:
             flash("No se pudo extraer texto del PDF.")
             return redirect(url_for('index'))
@@ -171,7 +202,9 @@ def procesar_pdf():
             return redirect(url_for('index'))
 
         # 👉 Mostrar formulario editable con los datos
-        return render_template("result_form.html", datos=extracted_data, pdf_filename=archivo.filename)
+        #return render_template("result_form.html", datos=extracted_data, pdf_filename=archivo.filename)
+        pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
+        return render_template("result_form.html", datos=extracted_data, pdf_data=pdf_base64, pdf_filename=archivo.filename)
 
 
     else:
@@ -192,23 +225,29 @@ def confirmar_datos():
         flash("No se recibieron datos para confirmar.")
         return redirect(url_for('index'))
 
-    # Obtener el nombre del archivo
-    filename = datos_confirmados.get("pdf_filename", "")
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    # Extraer nombre del archivo y base64 del PDF
+    filename = datos_confirmados.pop("pdf_filename", None)
+    pdf_base64 = datos_confirmados.pop("pdf_data", None)
 
-    # Subir el archivo si existe y obtener link
-    if os.path.exists(filepath):
-        link_pdf = upload_pdf_to_drive(filepath, filename)
+    if not filename or not pdf_base64:
+        flash("Faltan datos del archivo PDF.")
+        return redirect(url_for('index'))
+
+    try:
+        # Decodificar PDF y subirlo a Google Drive
+        pdf_bytes = base64.b64decode(pdf_base64)
+        link_pdf = upload_pdf_to_drive_bytes(pdf_bytes, filename)
         datos_confirmados["Link PDF"] = link_pdf
-    else:
+    except Exception as e:
+        logging.error(f"❌ Error al subir PDF a Drive: {e}")
         datos_confirmados["Link PDF"] = "No disponible"
 
-    # Eliminar el nombre del archivo para que no se inserte en el Excel
-    datos_confirmados.pop("pdf_filename", None)
-
+    # Insertar los datos en Google Sheets
     insert_data_into_sheet(datos_confirmados)
+
     flash("✅ Datos confirmados, PDF subido a Drive e insertado en la hoja.")
     return redirect(url_for('index'))
+
 
 
 

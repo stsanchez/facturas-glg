@@ -15,8 +15,9 @@
           </div>
         {% endfor %}
 
-        <!-- ✅ Campo oculto con el nombre del PDF -->
+        <!-- Campos ocultos para enviar nombre y datos del PDF -->
         <input type="hidden" name="pdf_filename" value="{{ pdf_filename }}">
+        <input type="hidden" name="pdf_data" value="{{ pdf_data }}">
 
         <div class="d-flex justify-content-between">
           <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar y volver</a>
